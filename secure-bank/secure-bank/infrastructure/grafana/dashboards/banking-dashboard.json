@@ -1,0 +1,118 @@
+{
+  "dashboard": {
+    "title": "SecureBank Operations Dashboard",
+    "uid": "securebank-ops",
+    "timezone": "browser",
+    "panels": [
+      {
+        "title": "Transaction Success Rate",
+        "type": "gauge",
+        "gridPos": { "x": 0, "y": 0, "w": 6, "h": 8 },
+        "targets": [{
+          "expr": "sum(rate(transactions_total{status='completed'}[5m])) / sum(rate(transactions_total[5m])) * 100"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "steps": [
+                { "value": 0, "color": "red" },
+                { "value": 95, "color": "yellow" },
+                { "value": 99, "color": "green" }
+              ]
+            },
+            "unit": "percent",
+            "max": 100
+          }
+        }
+      },
+      {
+        "title": "Transactions Per Second",
+        "type": "stat",
+        "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+        "targets": [{
+          "expr": "sum(rate(transactions_total[1m]))"
+        }],
+        "fieldConfig": {
+          "defaults": { "unit": "ops" }
+        }
+      },
+      {
+        "title": "Fraud Detection Rate",
+        "type": "stat",
+        "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+        "targets": [{
+          "expr": "sum(rate(fraud_detected_total[1h])) / sum(rate(fraud_analyzed_total[1h])) * 100"
+        }],
+        "fieldConfig": {
+          "defaults": { "unit": "percent", "color": { "mode": "thresholds" } }
+        }
+      },
+      {
+        "title": "System Uptime",
+        "type": "stat",
+        "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+        "targets": [{
+          "expr": "avg(up{job=~'.*-service'}) * 100"
+        }],
+        "fieldConfig": {
+          "defaults": { "unit": "percent" }
+        }
+      },
+      {
+        "title": "Transaction Volume Over Time",
+        "type": "timeseries",
+        "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+        "targets": [{
+          "expr": "sum(rate(transactions_total[5m])) by (type)",
+          "legendFormat": "{{type}}"
+        }]
+      },
+      {
+        "title": "Fraud Alerts",
+        "type": "timeseries",
+        "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+        "targets": [{
+          "expr": "sum(rate(fraud_detected_total[5m])) by (risk_level)",
+          "legendFormat": "{{risk_level}}"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "custom": { "fillOpacity": 20 }
+          }
+        }
+      },
+      {
+        "title": "API Response Time (p99)",
+        "type": "timeseries",
+        "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
+        "targets": [{
+          "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service))",
+          "legendFormat": "{{service}}"
+        }],
+        "fieldConfig": {
+          "defaults": { "unit": "s" }
+        }
+      },
+      {
+        "title": "Kafka Consumer Lag",
+        "type": "timeseries",
+        "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
+        "targets": [{
+          "expr": "sum(kafka_consumer_lag) by (topic)",
+          "legendFormat": "{{topic}}"
+        }]
+      },
+      {
+        "title": "Daily Transaction Summary",
+        "type": "table",
+        "gridPos": { "x": 0, "y": 24, "w": 24, "h": 6 },
+        "targets": [{
+          "expr": "sum(increase(transactions_total[24h])) by (type, status)",
+          "format": "table"
+        }]
+      }
+    ],
+    "refresh": "10s",
+    "time": { "from": "now-1h", "to": "now" }
+  }
+}
